@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "io.github.frankekn.lid",
   "name": "Lid Stay Awake",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Frank Yang",
   "license": "MIT",
   "description": "Toggle whether closing the laptop lid suspends, or keeps the system running with the screen off.",
