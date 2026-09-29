@@ -60,7 +60,7 @@ Panel {
     id: button
     anchors.fill: parent
     bar: root.bar
-    text: "󰌢"
+    text: root.awake ? "󰌢" : "󰟩"
     slotSize: Style.bar.statusSlot
     active: root.awake
     dimmed: !root.awake
@@ -99,7 +99,7 @@ Panel {
           Text {
             id: heroIcon
             textFormat: Text.PlainText
-            text: "󰌢"
+            text: root.awake ? "󰌢" : "󰟩"
             color: root.bar.foreground
             font.family: root.bar.fontFamily
             font.pixelSize: Style.font.display
