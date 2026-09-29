@@ -1,0 +1,98 @@
+#!/bin/bash
+
+# Toggle "lid close keeps the system running, screen off" mode.
+# on   - hold a handle-lid-switch inhibitor so logind never suspends on lid
+#        close; the internal panel is disabled while the lid is down.
+# off  - release the inhibitor (stock behavior: lid close locks + suspends).
+
+STATE_DIR="$HOME/.local/state/omarchy"
+FLAG="$STATE_DIR/lid-stay-awake"
+UNIT="omarchy-lid-stay-awake"
+
+internal_monitor() {
+  local name
+  name=$(omarchy-hyprland-monitor-laptop 2>/dev/null)
+  [[ -n $name && $name =~ ^[A-Za-z0-9._-]+$ ]] && printf '%s\n' "$name"
+}
+
+is_on() {
+  [[ -f $FLAG ]] && systemctl --user is-active --quiet "$UNIT"
+}
+
+# DPMS off instead of disabling the output: removing eDP-1 via a monitor rule
+# races the lock screen's surface creation and has crashed the shell. DPMS
+# keeps the output valid; the panel just powers down.
+screen_off() {
+  local internal
+  internal=$(internal_monitor) || return 0
+  [[ -n $internal ]] || return 0
+  hyprctl dispatch dpms off "$internal" >/dev/null 2>&1 || true
+}
+
+screen_on() {
+  local internal
+  internal=$(internal_monitor) || return 0
+  [[ -n $internal ]] || return 0
+  hyprctl dispatch dpms on "$internal" >/dev/null 2>&1 || true
+}
+
+cmd_on() {
+  mkdir -p "$STATE_DIR"
+  systemctl --user stop "$UNIT" >/dev/null 2>&1
+  systemd-run --user --quiet --collect --unit="$UNIT" \
+    systemd-inhibit --what=handle-lid-switch \
+      --who=omarchy-lid-stay-awake \
+      --why="Keep running when the lid is closed" \
+      --mode=block \
+      sleep infinity || return 1
+  : >"$FLAG"
+  omarchy-hw-laptop-closed 2>/dev/null && screen_off || true
+}
+
+cmd_off() {
+  rm -f "$FLAG"
+  systemctl --user stop "$UNIT" >/dev/null 2>&1
+  screen_on
+}
+
+case "${1:-status}" in
+  on)
+    cmd_on
+    ;;
+  off)
+    cmd_off
+    ;;
+  toggle)
+    if is_on; then cmd_off; else cmd_on; fi
+    ;;
+  closed)
+    # Bound to switch:on:Lid Switch; the default omarchy binding still locks.
+    # The lock surface wakes the panel ~a second after the lid event, so
+    # re-apply dpms off a few times while the lid stays closed.
+    is_on || exit 0
+    screen_off
+    for delay in 1 2.5 5; do
+      ( sleep "$delay"
+        is_on && omarchy-hw-laptop-closed 2>/dev/null && screen_off
+      ) >/dev/null 2>&1 &
+    done
+    ;;
+  opened)
+    # Bound to switch:off:Lid Switch; unconditional so a manual DPMS-off or a
+    # lid-closed shutdown path can never strand the panel dark.
+    screen_on
+    ;;
+  status)
+    if is_on; then
+      echo on
+      exit 0
+    else
+      echo off
+      exit 1
+    fi
+    ;;
+  *)
+    echo "Usage: omarchy-lid-stay-awake [on|off|toggle|closed|opened|status]" >&2
+    exit 64
+    ;;
+esac

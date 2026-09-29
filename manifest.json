@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.frankekn.lid",
+  "name": "Lid Stay Awake",
+  "version": "1.0.0",
+  "author": "Frank Yang",
+  "license": "MIT",
+  "description": "Toggle whether closing the laptop lid suspends, or keeps the system running with the screen off.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Lid Stay Awake",
+    "description": "One bar icon that toggles lid-close behavior between suspend and keep-running-with-screen-off.",
+    "category": "System",
+    "aliases": [
+      "lid",
+      "clamshell",
+      "stay-awake"
+    ],
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}
