@@ -5,6 +5,7 @@ An [Omarchy](https://omarchy.org) bar plugin that toggles what your laptop does 
 - **OFF** (default): closing the lid locks the session and suspends.
 - **ON**: closing the lid turns the screen off but keeps the system running — music, builds, SSH sessions, and downloads keep going. Opening the lid brings the screen back.
 
+![widget dropdown](docs/widget.png)
 
 ## How it works
 
